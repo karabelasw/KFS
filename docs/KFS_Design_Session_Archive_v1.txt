@@ -1,0 +1,71 @@
+KFS Design Session Archive
+
+This document captures the major architectural conclusions from our
+discussion.
+
+Vision
+
+-   A user owns an unlimited number of Knowledge Bases.
+-   Each Knowledge Base is an independent tree in the user’s forest.
+-   KFS is a personal knowledge management system centered on capturing,
+    organizing, and connecting knowledge.
+
+Core Domain
+
+User └── KnowledgeBase └── Node ├── Node… └── Entry
+
+Definitions: - KnowledgeBase: root of a tree. - Node: recursive
+organizational object. - Entry: the actual knowledge. - Supporting
+entities: Attachments, Images, Comments, Tags. - Relationships connect
+Entries, forming a knowledge graph.
+
+Domain Rules
+
+1.  User owns many Knowledge Bases.
+2.  Each Knowledge Base has one root Node.
+3.  Nodes may contain child Nodes.
+4.  Nodes may contain Entries.
+5.  Nodes may contain both child Nodes and Entries.
+6.  Entries do not contain Nodes.
+7.  All entities have unique identities.
+8.  Parent/child relationships are explicit.
+9.  Core model is domain-neutral.
+10. Specialized behavior extends Entries rather than changing the core
+    model.
+
+Knowledge Graph
+
+The tree answers “Where does this belong?” The graph answers “What is
+this related to?”
+
+Relationships may include: - RELATED_TO - REFERENCES - REQUIRES -
+PRECEDES - FOLLOW_UP - SUPERSEDES - PART_OF - CAUSED_BY
+
+Data Entry Philosophy
+
+The discussion concluded that KFS should be entry-first.
+
+Workflows: 1. Structured entry. 2. Tree-first organization. 3. Quick
+capture. 4. AI-assisted suggestions.
+
+AI assists but never owns or decides.
+
+Capture Lifecycle
+
+Stage 1: Capture. Stage 2: Enrichment. Stage 3: Organization.
+
+Knowledge should never be lost because organization is incomplete.
+
+Inbox
+
+New entries may initially live in an Inbox until organized. Users may
+also specify a location immediately. Nodes may be created automatically
+as needed.
+
+Architectural Direction
+
+The next deliverables should be: - Domain Specification - ERD - Database
+DDL - JPA Entities - Repositories - Services - Controllers - UI
+
+This archive summarizes the architectural decisions reached during the
+session and is intended as a project artifact for version control.
