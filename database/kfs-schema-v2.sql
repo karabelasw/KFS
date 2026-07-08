@@ -84,8 +84,6 @@ CREATE TABLE IF NOT EXISTS entry (
     created_by BIGINT NOT NULL,
     last_modified TIMESTAMP NULL,
     modified_by BIGINT NULL,
-    archived_at TIMESTAMP NULL,
-    archived_by BIGINT NULL,
     version BIGINT NOT NULL DEFAULT 0,
 
     CONSTRAINT fk_entry_kb
@@ -104,9 +102,7 @@ CREATE TABLE IF NOT EXISTS entry (
     CONSTRAINT fk_entry_created_by
         FOREIGN KEY (created_by) REFERENCES user(id),
     CONSTRAINT fk_entry_modified_by
-        FOREIGN KEY (modified_by) REFERENCES user(id),
-    CONSTRAINT fk_entry_archived_by
-        FOREIGN KEY (archived_by) REFERENCES user(id)
+        FOREIGN KEY (modified_by) REFERENCES user(id)
 );
 
 /**
