@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS entry_status (
 INSERT INTO entry_status (code, name, description, display_order)
 VALUES
 ('INBOX', 'Inbox', 'Default value. All entries are set to an INBOX state', 1),
-('ACTIVE', 'Active', 'Entry has been organized under one or more Nodes', 2),
+('ACTIVE', 'Active', 'Entry has been filed into a Knowledge Base the user chose; further organization into Nodes is optional', 2),
 ('ARCHIVED', 'Archived', 'Entry has been moved into an unsearchable state', 3);
 
 CREATE TABLE IF NOT EXISTS source (
@@ -235,6 +235,7 @@ CREATE TABLE IF NOT EXISTS node (
     knowledge_base_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     parent_node_id BIGINT NULL,
+    display_order INT NOT NULL DEFAULT 0,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
