@@ -78,7 +78,10 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
     CONSTRAINT fk_kb_modified_by
         FOREIGN KEY (modified_by) REFERENCES user(id),
     CONSTRAINT fk_kb_archived_by
-        FOREIGN KEY (archived_by) REFERENCES user(id)
+        FOREIGN KEY (archived_by) REFERENCES user(id),
+
+    CONSTRAINT uq_kb_name_per_owner
+        UNIQUE (owner_id, name)
 );
 
 /**
