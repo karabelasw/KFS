@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS user (
 );
 
 /**
+System user — represents KFS itself, not an end user.
+Used to attribute seeded/system-defined data (e.g. curated Content
+Types) that isn't created by any actual person.
+*/
+INSERT INTO user (username, email)
+VALUES ('system', 'system@kfs.local');
+
+/**
 Reference tables
 */
 CREATE TABLE IF NOT EXISTS entry_status (
@@ -53,6 +61,7 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     owner_id BIGINT NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
@@ -73,6 +82,89 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
 );
 
 /**
+Content type — reference table.
+Governs which specialized fields (Attributes) apply to an Entry.
+
+system_defined = TRUE:  a curated type shipped by KFS (e.g. Recipe),
+                         backed by its own extension table
+                         (e.g. recipe_detail), owner_id is NULL.
+system_defined = FALSE: a type authored by a user at runtime, no
+                         extension table; its fields are described by
+                         content_type_attribute and its values are
+                         stored in entry.custom_attributes (JSON).
+*/
+CREATE TABLE IF NOT EXISTS content_type (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    system_defined BOOLEAN NOT NULL DEFAULT TRUE,
+    owner_id BIGINT NULL,
+    display_order INT NOT NULL DEFAULT 0,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+    archived_at TIMESTAMP NULL,
+    archived_by BIGINT NULL,
+
+    CONSTRAINT fk_ct_owner
+        FOREIGN KEY (owner_id) REFERENCES user(id),
+    CONSTRAINT fk_ct_created_by
+        FOREIGN KEY (created_by) REFERENCES user(id),
+    CONSTRAINT fk_ct_archived_by
+        FOREIGN KEY (archived_by) REFERENCES user(id),
+
+    CONSTRAINT ck_ct_owner_matches_scope
+        CHECK (
+            (system_defined = TRUE AND owner_id IS NULL)
+            OR
+            (system_defined = FALSE AND owner_id IS NOT NULL)
+        )
+);
+
+INSERT INTO content_type (code, name, description, system_defined, display_order, created_by)
+VALUES
+('NOTE', 'Note', 'General-purpose note or reflection; no specialized attributes', TRUE, 1, (SELECT id FROM user WHERE username = 'system')),
+('RECIPE', 'Recipe', 'A recipe, backed by recipe_detail', TRUE, 2, (SELECT id FROM user WHERE username = 'system'));
+
+/**
+Content type attribute — the field definitions for a user-defined
+Content Type. Only populated when content_type.system_defined = FALSE;
+curated types define their fields as real columns on their own
+extension table instead (e.g. recipe_detail).
+*/
+CREATE TABLE IF NOT EXISTS content_type_attribute (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    content_type_id BIGINT NOT NULL,
+    attribute_name VARCHAR(100) NOT NULL,
+    data_type VARCHAR(50) NOT NULL,
+    display_order INT NOT NULL DEFAULT 0,
+    required BOOLEAN NOT NULL DEFAULT FALSE,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+    last_modified TIMESTAMP NULL,
+    modified_by BIGINT NULL,
+
+    CONSTRAINT fk_cta_content_type
+        FOREIGN KEY (content_type_id)
+        REFERENCES content_type(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_cta_created_by
+        FOREIGN KEY (created_by) REFERENCES user(id),
+    CONSTRAINT fk_cta_modified_by
+        FOREIGN KEY (modified_by) REFERENCES user(id),
+
+    CONSTRAINT ck_cta_data_type
+        CHECK (data_type IN ('TEXT', 'NUMBER', 'DATE', 'BOOLEAN')),
+
+    CONSTRAINT uq_cta_name_per_type
+        UNIQUE (content_type_id, attribute_name)
+);
+
+/**
 Entry
 */
 CREATE TABLE IF NOT EXISTS entry (
@@ -82,6 +174,8 @@ CREATE TABLE IF NOT EXISTS entry (
     content TEXT,
     status_id BIGINT NOT NULL,
     source_id BIGINT NOT NULL,
+    content_type_id BIGINT NOT NULL,
+    custom_attributes JSON NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
@@ -98,6 +192,10 @@ CREATE TABLE IF NOT EXISTS entry (
         FOREIGN KEY (status_id)
         REFERENCES entry_status(id),
 
+    CONSTRAINT fk_entry_content_type
+        FOREIGN KEY (content_type_id)
+        REFERENCES content_type(id),
+
     CONSTRAINT fk_entry_source
         FOREIGN KEY (source_id)
         REFERENCES source(id),
@@ -106,6 +204,24 @@ CREATE TABLE IF NOT EXISTS entry (
         FOREIGN KEY (created_by) REFERENCES user(id),
     CONSTRAINT fk_entry_modified_by
         FOREIGN KEY (modified_by) REFERENCES user(id)
+);
+
+/**
+Recipe detail — curated extension table for content_type = RECIPE.
+1:1 with entry, sharing its primary key. Only present when
+entry.content_type_id references RECIPE.
+*/
+CREATE TABLE IF NOT EXISTS recipe_detail (
+    entry_id BIGINT PRIMARY KEY,
+    prep_time_minutes INT,
+    cook_time_minutes INT,
+    servings INT,
+    difficulty VARCHAR(50),
+
+    CONSTRAINT fk_recipe_entry
+        FOREIGN KEY (entry_id)
+        REFERENCES entry(id)
+        ON DELETE CASCADE
 );
 
 /**
