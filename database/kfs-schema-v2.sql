@@ -529,7 +529,7 @@ CREATE TABLE IF NOT EXISTS attachment (
     attachment_type_id BIGINT NOT NULL,
     file_id BIGINT NULL,
     external_url VARCHAR(1000) NULL,
-    display_name VARCHAR(255) NULL,
+    display_name VARCHAR(255) NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
@@ -562,5 +562,8 @@ CREATE TABLE IF NOT EXISTS attachment (
             (file_id IS NOT NULL AND external_url IS NULL)
             OR
             (file_id IS NULL AND external_url IS NOT NULL)
-        )
+        ),
+
+    CONSTRAINT uq_attachment_display_name_per_entry
+        UNIQUE (entry_id, display_name)
 );
