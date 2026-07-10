@@ -5,6 +5,13 @@ erDiagram
         bigint id PK
         varchar username UK
         varchar email UK
+        bigint system_role_id FK
+    }
+
+    SYSTEM_ROLE {
+        bigint id PK
+        varchar code UK
+        varchar name
     }
 
     KNOWLEDGE_BASE {
@@ -136,6 +143,7 @@ erDiagram
     }
 
     %% --- Ownership / access ---
+    SYSTEM_ROLE ||--o{ USER : "grants authority to"
     USER ||--o{ KNOWLEDGE_BASE : "owns"
     USER ||--o{ KNOWLEDGE_BASE_ACCESS : "granted to"
     KNOWLEDGE_BASE ||--o{ KNOWLEDGE_BASE_ACCESS : "grants access via"

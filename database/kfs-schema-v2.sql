@@ -2,6 +2,31 @@ CREATE DATABASE IF NOT EXISTS KFS;
 USE KFS;
 
 /**
+System role — reference table (see ADR-0009).
+Defines the system-wide role vocabulary. Every user holds exactly
+one role at a time (single FK on user.system_role_id, not a join
+table); a user's authority is either ADMIN or USER platform-wide,
+never a combination of the two.
+
+SYSTEM is reserved for the seeded 'system' account below, so that
+non-person system-attributed data isn't misrepresented as an ADMIN.
+*/
+CREATE TABLE IF NOT EXISTS system_role (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    display_order INT NOT NULL DEFAULT 0,
+    active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+INSERT INTO system_role (code, name, description, display_order)
+VALUES
+('ADMIN', 'Administrator', 'Full platform administrative authority', 1),
+('USER', 'User', 'Standard end-user account', 2),
+('SYSTEM', 'System', 'Non-person account representing KFS itself', 3);
+
+/**
 Minimal user table — placeholder pending full security/User design.
 Referenced by every audit column below.
 */
@@ -9,7 +34,11 @@ CREATE TABLE IF NOT EXISTS user (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    system_role_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user_system_role
+        FOREIGN KEY (system_role_id) REFERENCES system_role(id)
 );
 
 /**
@@ -17,8 +46,8 @@ System user — represents KFS itself, not an end user.
 Used to attribute seeded/system-defined data (e.g. curated Content
 Types) that isn't created by any actual person.
 */
-INSERT INTO user (username, email)
-VALUES ('system', 'system@kfs.local');
+INSERT INTO user (username, email, system_role_id)
+VALUES ('system', 'system@kfs.local', (SELECT id FROM system_role WHERE code = 'SYSTEM'));
 
 /**
 Reference tables
