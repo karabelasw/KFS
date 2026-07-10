@@ -10,7 +10,7 @@ Bootstrap <br/>
 MySQL <br/>
 JPA/Hibernate <br/>
 Maven <br/>
-Eclipse IDE for Enterprise Java and Web Developers (includes Incubating components--not sure what those are, but it they sound cool!)
+Eclipse IDE for Enterprise Java and Web Developers (includes Incubating components--not sure what those are but they sound mysterious and cool!)
 Version: 2025-12 (4.38.0)
 
 <br>
