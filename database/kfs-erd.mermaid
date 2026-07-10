@@ -33,15 +33,15 @@ erDiagram
     }
 
     ENTRY_NODE {
-        bigint entry_id PK_FK
-        bigint node_id PK_FK
+        bigint entry_id PK
+        bigint node_id PK
         int display_order
         bigint added_by FK
         timestamp added_at
     }
 
     RECIPE_DETAIL {
-        bigint entry_id PK_FK
+        bigint entry_id PK
         int prep_time_minutes
         int cook_time_minutes
         int servings
