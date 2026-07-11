@@ -600,3 +600,69 @@ CREATE TABLE IF NOT EXISTS attachment (
     CONSTRAINT uq_attachment_display_name_per_entry
         UNIQUE (entry_id, display_name)
 );
+
+/**
+Tag — KB-scoped tag vocabulary (see ADR-0010).
+Authored by the KB owner, consistent with ADR-0008 (Entries, Nodes, and
+Relationships are owner-authored; Comments/Attachments are the only
+contributor-writable surfaces). Scoped to a single Knowledge Base so the
+same tag name may carry different meaning in different KBs, and so a
+future collaborator's visible tag vocabulary is naturally bounded by the
+KB they were granted access to.
+*/
+CREATE TABLE IF NOT EXISTS tag (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    knowledge_base_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+    last_modified TIMESTAMP NULL,
+    modified_by BIGINT NULL,
+    archived_at TIMESTAMP NULL,
+    archived_by BIGINT NULL,
+
+    CONSTRAINT fk_tag_kb
+        FOREIGN KEY (knowledge_base_id)
+        REFERENCES knowledge_base(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_tag_created_by
+        FOREIGN KEY (created_by) REFERENCES user(id),
+    CONSTRAINT fk_tag_modified_by
+        FOREIGN KEY (modified_by) REFERENCES user(id),
+    CONSTRAINT fk_tag_archived_by
+        FOREIGN KEY (archived_by) REFERENCES user(id),
+
+    CONSTRAINT uq_tag_kb_name
+        UNIQUE (knowledge_base_id, name)
+);
+
+/**
+EntryTag — the association between an Entry and a Tag (see ADR-0010).
+First-class association table, consistent with the entry_node pattern
+(ADR-0007), though deliberately minimal: tagging is owner-authored only
+(ADR-0008), so no display_order or version tracking is needed here.
+*/
+CREATE TABLE IF NOT EXISTS entry_tag (
+    entry_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+
+    added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+
+    PRIMARY KEY (entry_id, tag_id),
+
+    CONSTRAINT fk_et_entry
+        FOREIGN KEY (entry_id)
+        REFERENCES entry(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_et_tag
+        FOREIGN KEY (tag_id)
+        REFERENCES tag(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_et_created_by
+        FOREIGN KEY (created_by) REFERENCES user(id)
+);
