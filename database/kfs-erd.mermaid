@@ -1,19 +1,25 @@
-%%{init: {'themeVariables': { 'lineColor': '#e74c3c', 'relationLabelColor': '#e74c3c'}}}%%
+%%{init: {'themeVariables': {'lineColor': '#e74c3c'}}}%%
 erDiagram
 
+    USER ||--o{ KNOWLEDGE_BASE : owns
     USER {
         bigint id PK
-        varchar username UK
-        varchar email UK
+        varchar username
+        varchar email
         bigint system_role_id FK
     }
 
+    SYSTEM_ROLE ||--o{ USER : classifies
     SYSTEM_ROLE {
         bigint id PK
-        varchar code UK
+        varchar code
         varchar name
     }
 
+    KNOWLEDGE_BASE ||--o{ ENTRY : contains
+    KNOWLEDGE_BASE ||--o{ NODE : contains
+    KNOWLEDGE_BASE ||--o{ TAG : scopes
+    KNOWLEDGE_BASE ||--o{ KNOWLEDGE_BASE_ACCESS : "shared via"
     KNOWLEDGE_BASE {
         bigint id PK
         varchar name
@@ -21,14 +27,58 @@ erDiagram
         boolean is_default
     }
 
-    NODE {
+    ACCESS_LEVEL ||--o{ KNOWLEDGE_BASE_ACCESS : defines
+    ACCESS_LEVEL {
         bigint id PK
-        bigint knowledge_base_id FK
+        varchar code
         varchar name
-        bigint parent_node_id FK
-        int display_order
     }
 
+    KNOWLEDGE_BASE_ACCESS {
+        bigint id PK
+        bigint knowledge_base_id FK
+        bigint user_id FK
+        bigint access_level_id FK
+    }
+
+    ENTRY_STATUS ||--o{ ENTRY : classifies
+    ENTRY_STATUS {
+        bigint id PK
+        varchar code
+        varchar name
+    }
+
+    SOURCE ||--o{ ENTRY : classifies
+    SOURCE {
+        bigint id PK
+        varchar code
+        varchar name
+    }
+
+    CONTENT_TYPE ||--o{ ENTRY : classifies
+    CONTENT_TYPE ||--o{ CONTENT_TYPE_ATTRIBUTE : defines
+    CONTENT_TYPE {
+        bigint id PK
+        varchar code
+        varchar name
+        boolean system_defined
+        bigint owner_id FK
+    }
+
+    CONTENT_TYPE_ATTRIBUTE {
+        bigint id PK
+        bigint content_type_id FK
+        varchar attribute_name
+        varchar data_type
+    }
+
+    ENTRY ||--o| RECIPE_DETAIL : extends
+    ENTRY ||--o{ ENTRY_NODE : "filed via"
+    ENTRY ||--o{ ENTRY_TAG : "tagged via"
+    ENTRY ||--o{ COMMENT : has
+    ENTRY ||--o{ ATTACHMENT : has
+    ENTRY ||--o{ RELATIONSHIP : "source of"
+    ENTRY ||--o{ RELATIONSHIP : "target of"
     ENTRY {
         bigint id PK
         bigint knowledge_base_id FK
@@ -40,20 +90,49 @@ erDiagram
         json custom_attributes
     }
 
-    ENTRY_NODE {
-        bigint entry_id PK
-        bigint node_id PK
-        int display_order
-        bigint added_by FK
-        timestamp added_at
-    }
-
     RECIPE_DETAIL {
         bigint entry_id PK
         int prep_time_minutes
         int cook_time_minutes
         int servings
         varchar difficulty
+    }
+
+    NODE ||--o{ NODE : "parent of"
+    NODE ||--o{ ENTRY_NODE : "organizes via"
+    NODE {
+        bigint id PK
+        bigint knowledge_base_id FK
+        varchar name
+        bigint parent_node_id FK
+        int display_order
+    }
+
+    ENTRY_NODE {
+        bigint entry_id PK
+        bigint node_id PK
+        int display_order
+    }
+
+    TAG ||--o{ ENTRY_TAG : "applied via"
+    TAG {
+        bigint id PK
+        bigint knowledge_base_id FK
+        varchar name
+    }
+
+    ENTRY_TAG {
+        bigint entry_id PK
+        bigint tag_id PK
+        timestamp added_at
+    }
+
+    RELATIONSHIP_TYPE ||--o{ RELATIONSHIP : classifies
+    RELATIONSHIP_TYPE {
+        bigint id PK
+        varchar code
+        varchar name
+        boolean symmetric
     }
 
     RELATIONSHIP {
@@ -64,58 +143,27 @@ erDiagram
         varchar notes
     }
 
-    RELATIONSHIP_TYPE {
-        bigint id PK
-        varchar code UK
-        varchar name
-        boolean symmetric
-    }
-
-    ENTRY_STATUS {
-        bigint id PK
-        varchar code UK
-        varchar name
-    }
-
-    SOURCE {
-        bigint id PK
-        varchar code UK
-        varchar name
-    }
-
-    CONTENT_TYPE {
-        bigint id PK
-        varchar code UK
-        varchar name
-        boolean system_defined
-        bigint owner_id FK
-    }
-
-    CONTENT_TYPE_ATTRIBUTE {
-        bigint id PK
-        bigint content_type_id FK
-        varchar attribute_name
-        varchar data_type
-        boolean required
-    }
-
-    ACCESS_LEVEL {
-        bigint id PK
-        varchar code UK
-        varchar name
-    }
-
-    KNOWLEDGE_BASE_ACCESS {
-        bigint id PK
-        bigint knowledge_base_id FK
-        bigint user_id FK
-        bigint access_level_id FK
-    }
-
     COMMENT {
         bigint id PK
         bigint entry_id FK
         text content
+    }
+
+    ATTACHMENT_TYPE ||--o{ ATTACHMENT : classifies
+    ATTACHMENT_TYPE {
+        bigint id PK
+        varchar code
+        varchar name
+    }
+
+    FILE ||--o{ ATTACHMENT : "referenced by"
+    FILE {
+        bigint id PK
+        varchar file_name
+        varchar file_path
+        varchar mime_type
+        bigint file_size
+        char content_hash
     }
 
     ATTACHMENT {
@@ -126,55 +174,3 @@ erDiagram
         varchar external_url
         varchar display_name
     }
-
-    ATTACHMENT_TYPE {
-        bigint id PK
-        varchar code UK
-        varchar name
-    }
-
-    FILE {
-        bigint id PK
-        varchar file_name
-        varchar file_path
-        varchar mime_type
-        bigint file_size
-        char content_hash UK
-    }
-
-    %% --- Ownership / access ---
-    SYSTEM_ROLE ||--o{ USER : "grants authority to"
-    USER ||--o{ KNOWLEDGE_BASE : "owns"
-    USER ||--o{ KNOWLEDGE_BASE_ACCESS : "granted to"
-    KNOWLEDGE_BASE ||--o{ KNOWLEDGE_BASE_ACCESS : "grants access via"
-    ACCESS_LEVEL ||--o{ KNOWLEDGE_BASE_ACCESS : "defines level"
-
-    %% --- Tree structure ---
-    KNOWLEDGE_BASE ||--o{ NODE : "contains"
-    NODE ||--o{ NODE : "parent of"
-
-    %% --- Entries ---
-    KNOWLEDGE_BASE ||--o{ ENTRY : "contains"
-    ENTRY_STATUS ||--o{ ENTRY : "governs lifecycle of"
-    SOURCE ||--o{ ENTRY : "originates"
-    CONTENT_TYPE ||--o{ ENTRY : "types"
-    ENTRY ||--o| RECIPE_DETAIL : "extends (when RECIPE)"
-
-    %% --- Entry <-> Node placement (ADR-0007) ---
-    ENTRY ||--o{ ENTRY_NODE : "placed via"
-    NODE ||--o{ ENTRY_NODE : "hosts via"
-
-    %% --- Content Type system (two-tier) ---
-    CONTENT_TYPE ||--o{ CONTENT_TYPE_ATTRIBUTE : "defines fields"
-    USER ||--o{ CONTENT_TYPE : "authors (user-defined)"
-
-    %% --- Knowledge graph ---
-    ENTRY ||--o{ RELATIONSHIP : "source of"
-    ENTRY ||--o{ RELATIONSHIP : "target of"
-    RELATIONSHIP_TYPE ||--o{ RELATIONSHIP : "typed by"
-
-    %% --- Collaboration layer (ADR-0008) ---
-    ENTRY ||--o{ COMMENT : "receives"
-    ENTRY ||--o{ ATTACHMENT : "attaches"
-    ATTACHMENT_TYPE ||--o{ ATTACHMENT : "typed by"
-    FILE ||--o{ ATTACHMENT : "referenced by"
