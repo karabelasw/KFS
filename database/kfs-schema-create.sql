@@ -1,4 +1,12 @@
-CREATE DATABASE IF NOT EXISTS KFS;
+-- ===================================================================
+-- KFS - FULL SCHEMA CREATE SCRIPT
+-- DESTRUCTIVE: drops and rebuilds the KFS database from scratch.
+-- Use for fresh dev environments only. NEVER run against a database
+-- with data you need to keep — use kfs-schema-migrations.sql instead
+-- to bring an existing database forward without data loss.
+-- ===================================================================
+DROP DATABASE IF EXISTS KFS;
+CREATE DATABASE KFS;
 USE KFS;
 
 /**
