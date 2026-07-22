@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 /** Package-private — only UserService (the interface) is exposed. */
 // @Service
-class UserServiceImpl implements UserService {
 
+class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     UserServiceImpl(UserRepository userRepository) {

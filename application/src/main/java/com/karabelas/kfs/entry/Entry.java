@@ -57,5 +57,69 @@ class Entry extends Auditable {
     @Column(name = "version", nullable = false)
     private Long version;
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Long getKnowledgeBaseId() {
+		return knowledgeBaseId;
+	}
+
+	public void setKnowledgeBaseId(Long knowledgeBaseId) {
+		this.knowledgeBaseId = knowledgeBaseId;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public Long getStatusId() {
+		return statusId;
+	}
+
+	public void setStatusId(Long statusId) {
+		this.statusId = statusId;
+	}
+
+	public Long getSourceId() {
+		return sourceId;
+	}
+
+	public void setSourceId(Long sourceId) {
+		this.sourceId = sourceId;
+	}
+
+	public Long getContentTypeId() {
+		return contentTypeId;
+	}
+
+	public void setContentTypeId(Long contentTypeId) {
+		this.contentTypeId = contentTypeId;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
+	}
+
     // getters/setters omitted from mock
 }
