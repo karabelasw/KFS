@@ -17,7 +17,7 @@ public interface TagService {
      */
     TagDto create(TagDto dto);
 
-    void tagEntry(Long entryId, Long tagId);
+    void tagEntry(Long entryId, Long tagId, Long userId);
 
     void untagEntry(Long entryId, Long tagId);
 }

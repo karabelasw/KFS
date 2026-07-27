@@ -38,8 +38,10 @@ public class TagController {
     }
 
     @PostMapping("/{tagId}/entries/{entryId}")
-    public void tagEntry(@PathVariable Long tagId, @PathVariable Long entryId) {
-        tagService.tagEntry(entryId, tagId);
+    public void tagEntry(@PathVariable Long tagId, @PathVariable Long entryId, @RequestParam Long userId) {
+        // userId is a request param for now, pending real authentication —
+        // once a Principal exists, this should come from that instead.
+        tagService.tagEntry(entryId, tagId, userId);
     }
 
     @DeleteMapping("/{tagId}/entries/{entryId}")

@@ -23,12 +23,16 @@ class EntryTag {
     @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt;
 
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
+
     EntryTag() {
     }
 
-    EntryTag(Long entryId, Long tagId, LocalDateTime addedAt) {
+    EntryTag(Long entryId, Long tagId, LocalDateTime addedAt, Long createdBy) {
         this.id = new EntryTagId(entryId, tagId);
         this.addedAt = addedAt;
+        this.createdBy = createdBy;
     }
 
     public EntryTagId getId() {
@@ -45,5 +49,13 @@ class EntryTag {
 
     public void setAddedAt(LocalDateTime addedAt) {
         this.addedAt = addedAt;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
     }
 }

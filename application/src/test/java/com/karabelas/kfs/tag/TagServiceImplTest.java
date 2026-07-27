@@ -81,7 +81,7 @@ class TagServiceImplTest {
         when(tagRepository.existsById(5L)).thenReturn(true);
         when(entryTagRepository.findById_EntryIdAndId_TagId(100L, 5L)).thenReturn(Optional.empty());
 
-        tagService.tagEntry(100L, 5L);
+        tagService.tagEntry(100L, 5L, 1L);
 
         verify(entryTagRepository, times(1)).save(any(EntryTag.class));
     }
@@ -89,10 +89,10 @@ class TagServiceImplTest {
     @Test
     void tagEntry_isIdempotent_whenAlreadyTagged() {
         when(tagRepository.existsById(5L)).thenReturn(true);
-        EntryTag existing = new EntryTag(100L, 5L, java.time.LocalDateTime.now());
+        EntryTag existing = new EntryTag(100L, 5L, java.time.LocalDateTime.now(), 1L);
         when(entryTagRepository.findById_EntryIdAndId_TagId(100L, 5L)).thenReturn(Optional.of(existing));
 
-        tagService.tagEntry(100L, 5L);
+        tagService.tagEntry(100L, 5L, 1L);
 
         verify(entryTagRepository, never()).save(any());
     }
@@ -101,13 +101,13 @@ class TagServiceImplTest {
     void tagEntry_throwsResourceNotFoundException_whenTagMissing() {
         when(tagRepository.existsById(999L)).thenReturn(false);
 
-        assertThatThrownBy(() -> tagService.tagEntry(100L, 999L))
+        assertThatThrownBy(() -> tagService.tagEntry(100L, 999L, 1L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void untagEntry_removesAssociation_whenPresent() {
-        EntryTag existing = new EntryTag(100L, 5L, java.time.LocalDateTime.now());
+        EntryTag existing = new EntryTag(100L, 5L, java.time.LocalDateTime.now(), 1L);
         when(entryTagRepository.findById_EntryIdAndId_TagId(100L, 5L)).thenReturn(Optional.of(existing));
 
         tagService.untagEntry(100L, 5L);

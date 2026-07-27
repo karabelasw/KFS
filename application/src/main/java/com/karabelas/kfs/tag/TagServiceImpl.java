@@ -50,12 +50,13 @@ class TagServiceImpl implements TagService {
     }
 
     @Override
-    public void tagEntry(Long entryId, Long tagId) {
+    public void tagEntry(Long entryId, Long tagId, Long userId) {
         if (!tagRepository.existsById(tagId)) {
             throw new ResourceNotFoundException("Tag " + tagId + " not found");
         }
         entryTagRepository.findById_EntryIdAndId_TagId(entryId, tagId)
-                .orElseGet(() -> entryTagRepository.save(new EntryTag(entryId, tagId, LocalDateTime.now())));
+                .orElseGet(() -> entryTagRepository.save(
+                        new EntryTag(entryId, tagId, LocalDateTime.now(), userId)));
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.karabelas.kfs.user;
 
-import com.karabelas.kfs.common.Auditable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,16 +7,24 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDateTime;
+
 /**
  * Package-private: accessed only through UserRepository / UserService,
  * never referenced directly outside this package.
+ *
+ * Deliberately does NOT extend Auditable — user is the root actor
+ * every other table's created_by/modified_by FK points back to, so
+ * there's no other User to attribute a User's own creation/
+ * modification to. The user table carries only a plain created_at
+ * (schema: kfs-schema-create.sql), not the full audit column set.
  *
  * systemRoleId is a single-role FK per ADR-0009 (system_role reference
  * table, not a many-to-many).
  */
 @Entity
 @Table(name = "user")
-class User extends Auditable {
+class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +39,9 @@ class User extends Auditable {
 
     @Column(name = "system_role_id", nullable = false)
     private Long systemRoleId;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     public Long getId() {
         return id;
@@ -63,5 +73,13 @@ class User extends Auditable {
 
     public void setSystemRoleId(Long systemRoleId) {
         this.systemRoleId = systemRoleId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
