@@ -1,6 +1,6 @@
 package com.karabelas.kfs.entry;
 
-// import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Service;
 import com.karabelas.kfs.common.ResourceNotFoundException;
 import com.karabelas.kfs.user.UserService;
 
@@ -18,7 +18,7 @@ import java.util.stream.Stream;
  * the only cross-package dependency this class has, and it goes
  * through the public seam only, never touching the User entity.
  */
-// @Service
+@Service
 class EntryServiceImpl implements EntryService {
 
     private final EntryRepository entryRepository;
@@ -31,22 +31,22 @@ class EntryServiceImpl implements EntryService {
 
     @Override
     public EntryDto findById(Long id) {
-        // Mock: Entry entry = entryRepository.findById(id)
-        //         .orElseThrow(() -> new ResourceNotFoundException("Entry " + id + " not found"));
-        // return toDto(entry, userService.findUsernamesByIds(collectUserIds(List.of(entry))));
-        return null;
+        Entry entry = entryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Entry " + id + " not found"));
+        Map<Long, String> usernames = userService.findUsernamesByIds(collectUserIds(List.of(entry)));
+        return toDto(entry, usernames);
     }
 
     @Override
     public List<EntryDto> findByKnowledgeBaseId(Long knowledgeBaseId) {
-        // Mock outline of the batch-resolution pattern:
-        //
-        // List<Entry> entries = entryRepository.findByKnowledgeBaseId(knowledgeBaseId);
-        // Map<Long, String> usernames = userService.findUsernamesByIds(collectUserIds(entries));
-        // return entries.stream()
-        //         .map(entry -> toDto(entry, usernames))
-        //         .collect(Collectors.toList());
-        return List.of();
+        List<Entry> entries = entryRepository.findByKnowledgeBaseId(knowledgeBaseId);
+        if (entries.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, String> usernames = userService.findUsernamesByIds(collectUserIds(entries));
+        return entries.stream()
+                .map(entry -> toDto(entry, usernames))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -55,18 +55,29 @@ class EntryServiceImpl implements EntryService {
      * once per list, not once per Entry (avoids N+1).
      */
     private Set<Long> collectUserIds(List<Entry> entries) {
-        // Mock: return entries.stream()
-        //         .flatMap(e -> Stream.of(e.getCreatedBy(), e.getModifiedBy()))
-        //         .filter(java.util.Objects::nonNull)
-        //         .collect(Collectors.toSet());
-        return Set.of();
+        return entries.stream()
+                .flatMap(e -> Stream.of(e.getCreatedBy(), e.getModifiedBy()))
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
     /** Maps an Entry + a pre-resolved username lookup map into an EntryDto. */
     private EntryDto toDto(Entry entry, Map<Long, String> usernames) {
-        // Mock: build EntryDto from entry fields, using
-        // usernames.get(entry.getCreatedBy()) / usernames.get(entry.getModifiedBy())
-        // for createdByUsername / modifiedByUsername.
-        return new EntryDto();
+        EntryDto dto = new EntryDto();
+        dto.setId(entry.getId());
+        dto.setKnowledgeBaseId(entry.getKnowledgeBaseId());
+        dto.setTitle(entry.getTitle());
+        dto.setContent(entry.getContent());
+        dto.setStatusId(entry.getStatusId());
+        dto.setSourceId(entry.getSourceId());
+        dto.setContentTypeId(entry.getContentTypeId());
+
+        dto.setCreatedAt(entry.getCreatedAt());
+        dto.setCreatedByUsername(usernames.get(entry.getCreatedBy()));
+        dto.setLastModified(entry.getLastModified());
+        dto.setModifiedByUsername(
+                entry.getModifiedBy() != null ? usernames.get(entry.getModifiedBy()) : null);
+
+        return dto;
     }
 }

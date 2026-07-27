@@ -25,4 +25,20 @@ public abstract class ArchivedAuditable extends Auditable {
 
     @Column(name = "archived_by")
     protected Long archivedBy;
+
+    public LocalDateTime getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(LocalDateTime archivedAt) {
+        this.archivedAt = archivedAt;
+    }
+
+    public Long getArchivedBy() {
+        return archivedBy;
+    }
+
+    public void setArchivedBy(Long archivedBy) {
+        this.archivedBy = archivedBy;
+    }
 }

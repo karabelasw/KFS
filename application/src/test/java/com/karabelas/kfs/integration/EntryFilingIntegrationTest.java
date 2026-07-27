@@ -2,69 +2,79 @@ package com.karabelas.kfs.integration;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.karabelas.kfs.knowledgebase.KnowledgeBaseDto;
+import com.karabelas.kfs.knowledgebase.KnowledgeBaseService;
+import com.karabelas.kfs.node.NodeDto;
+import com.karabelas.kfs.node.NodeService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
- * TEMPLATE for feature-level integration tests — the layer above
- * per-class unit tests, exercising a behavior that spans package
- * boundaries end-to-end (controller -> service -> repository, across
- * two or more of the 8 feature packages).
+ * Feature-level integration test — controller -> service -> repository,
+ * across package boundaries, exercising real Spring wiring and a real
+ * datasource rather than mocks.
  *
- * This is where the cross-cutting design decisions actually get
- * validated — they only mean something when tested through a
- * realistic flow, not against an isolated class:
- *   - entry.source_id NOT NULL
- *   - entry.status_id as the sole lifecycle authority
- *   - INBOX semantics (default KB, not yet deliberately filed)
- *   - entry_node as a first-class many-to-many (ADR-0007), including
- *     display_order reordering
- *   - KB-scoped tag namespace isolation (ADR-0010)
+ * STATUS UPDATE: KnowledgeBaseService, NodeService, and TagService are
+ * no longer stubs — they have real methods now (see
+ * KnowledgeBaseServiceImplTest / NodeServiceImplTest / TagServiceImplTest
+ * for their unit-level coverage). What's still blocking these two
+ * scenarios specifically is that EntryService only exposes
+ * findById/findByKnowledgeBaseId — there is no create(EntryDto) method
+ * on the public seam yet, so an Entry can't be created through
+ * EntryService the way these scenarios need. That's the one piece left
+ * before this file can run for real.
  *
- * This file lives in its own `integration` package (not inside
- * `entry` or `node`) because it deliberately depends on both public
- * seams (EntryService, NodeService) rather than reaching into either
- * package's internals — exactly the dependency direction the
- * package-by-feature convention is meant to enforce.
- *
- * NOT RUNNABLE YET: needs a real Spring context (application beans
- * uncommented/active), a test datasource (Testcontainers MySQL
- * 8.0.16+, consistent with EntryRepositoryTest), and EntryService /
- * NodeService to have real methods. Copy this shape for the other
- * cross-package scenarios (KB auto-provisioning + INBOX filing,
- * tagging + KB-scoped autocomplete, relationship creation validating
- * both entry ids) once each is ready to test.
+ * Also needs: a test datasource (Testcontainers MySQL 8.0.16+,
+ * consistent with EntryRepositoryTest) and an application-test
+ * properties/profile wiring one up — neither exists in the project yet.
  */
 @SpringBootTest
 @ActiveProfiles("test")
 class EntryFilingIntegrationTest {
 
+    @Autowired
+    private KnowledgeBaseService knowledgeBaseService;
+
+    @Autowired
+    private NodeService nodeService;
+
     @Test
-    @Disabled("Needs active Spring wiring + real Node/Entry service methods before this can run")
+    @Disabled("Blocked on EntryService.create(EntryDto) — not yet part of the public seam")
     void filingAnEntryIntoANode_movesItOutOfInbox() {
-        // Sketch of the eventual flow:
+        // Sketch of the eventual flow, updated to reflect the services
+        // that are now real:
         //
-        // 1. Create a user -> triggers default/INBOX KB auto-provisioning
-        //    (KnowledgeBaseService)
-        // 2. Create an Entry with no nodeId via EntryService -> assert
-        //    it shows up as "in INBOX" (i.e. in the default KB, no
-        //    entry_node row exists for it)
-        // 3. Create a Node in that same KB via NodeService
-        // 4. File the Entry into the Node (NodeService or a dedicated
-        //    filing endpoint) -> assert an entry_node row now exists
-        //    with the correct displayOrder
-        // 5. Assert the Entry is no longer considered "INBOX" — filed
-        //    status is derived from entry_node presence, not a flag
-        //    on Entry itself
+        // 1. KnowledgeBaseDto inbox = knowledgeBaseService.createDefaultKnowledgeBase(userId);
+        // 2. EntryDto entry = entryService.create(new EntryDto with inbox.getId())
+        //    -> entry is "in INBOX": in inbox's KB, no entry_node row.
+        // 3. NodeDto node = nodeService.create(new NodeDto in inbox.getId());
+        // 4. nodeService.fileEntry(node.getId(), entry.getId());
+        //    -> assert an entry_node row now exists with displayOrder 0.
+        // 5. Assert the Entry is no longer "INBOX" — filed status is
+        //    derived from entry_node presence, not a flag on Entry.
     }
 
     @Test
-    @Disabled("Needs active Spring wiring + real Entry service methods before this can run")
+    @Disabled("Blocked on EntryService.create(EntryDto) — not yet part of the public seam")
     void creatingAnEntry_alwaysRequiresASourceId() {
-        // Sketch: attempt to create an Entry via the public API/service
-        // without a sourceId and assert the request is rejected with a
-        // clear validation error, not a raw DB constraint failure —
-        // pins down entry.source_id NOT NULL at the service boundary,
-        // not just the schema.
+        // Sketch: attempt entryService.create(dto) with sourceId == null
+        // and assert a clear validation error at the service boundary,
+        // not a raw DataIntegrityViolationException from the DB layer —
+        // pins down entry.source_id NOT NULL as a service-level contract,
+        // not just a schema constraint (compare EntryRepositoryTest,
+        // which pins down the DB-level version of the same rule).
+    }
+
+    @Test
+    void knowledgeBaseAndNodeServices_areWiredIntoTheSpringContext() {
+        // Narrower smoke test that IS runnable today (once a test
+        // datasource/profile exists) — confirms the real beans wire up
+        // correctly end-to-end, without depending on entry creation.
+        assertThat(knowledgeBaseService).isNotNull();
+        assertThat(nodeService).isNotNull();
     }
 }

@@ -23,14 +23,10 @@ import static org.mockito.Mockito.when;
  * rely on:
  *   1. batch resolution via a single findAllById() call, and
  *   2. ids with no matching user are silently omitted, never an error.
- *
- * IMPORTANT — forward-looking, not currently green: requires User to
- * have getters/setters and UserRepository to actually extend
- * JpaRepository (both currently commented out in the mock).
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
-/*
+
     @Mock
     private UserRepository userRepository;
 
@@ -87,7 +83,7 @@ class UserServiceImplTest {
 
         assertThat(result).isNull();
     }
-*/
+
     private User newUser(Long id, String username) {
         User user = new User();
         user.setId(id);

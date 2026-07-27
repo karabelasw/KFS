@@ -1,36 +1,10 @@
 package com.karabelas.kfs.node;
 
-import com.karabelas.kfs.common.ArchivedAuditable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-/**
- * Package-private. Self-referencing (parentNodeId). Organizes
- * Entries — does not own them.
- */
-@Entity
-@Table(name = "node")
-class Node extends ArchivedAuditable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+public class NodeDto {
     private Long id;
-
-    @Column(name = "knowledge_base_id", nullable = false)
     private Long knowledgeBaseId;
-
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "parent_node_id")
     private Long parentNodeId;
-
-    @Column(name = "display_order", nullable = false)
     private int displayOrder;
 
     public Long getId() {

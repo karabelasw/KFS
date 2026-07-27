@@ -1,36 +1,10 @@
 package com.karabelas.kfs.relationship;
 
-import com.karabelas.kfs.common.ArchivedAuditable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-/**
- * Package-private. Peer graph connecting two Entries
- * (sourceEntryId -> targetEntryId), typed via relationshipTypeId.
- */
-@Entity
-@Table(name = "relationship")
-class Relationship extends ArchivedAuditable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+public class RelationshipDto {
     private Long id;
-
-    @Column(name = "source_entry_id", nullable = false)
     private Long sourceEntryId;
-
-    @Column(name = "target_entry_id", nullable = false)
     private Long targetEntryId;
-
-    @Column(name = "relationship_type_id", nullable = false)
     private Long relationshipTypeId;
-
-    @Column(name = "notes")
     private String notes;
 
     public Long getId() {
