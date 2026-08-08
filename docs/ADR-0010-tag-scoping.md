@@ -1,4 +1,4 @@
-# ADR-0010: Tag Scoping
+#Architecture Decision Record-0010: Tag Scoping
 
 ## Status
 Accepted
